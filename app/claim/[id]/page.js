@@ -83,46 +83,54 @@ export default function DynamicClaimPage({ params }) {
     try {
       const contract = getContract()
       if (!contract) {
-        console.log('No provider available, assuming eligible for manual claim')
-        setCanClaim(true)
-        setClaimInfo({
-          lastClaim: '0',
-          totalClaims: '0',
-          claimedToday: false,
-          remainingClaims: '3',
-          canClaimNow: true
-        })
+        console.log('No provider available, cannot verify eligibility')
+        setCanClaim(false)
+        setClaimInfo(null)
         return
       }
 
+      console.log('Verifying claim eligibility for address:', address)
       const info = await contract.getUserClaimInfo(address)
       
-      setClaimInfo({
+      const claimData = {
         lastClaim: info[0].toString(),
         totalClaims: info[1].toString(),
         claimedToday: info[2],
         remainingClaims: info[3].toString(),
         canClaimNow: info[4]
-      })
+      }
       
+      console.log('Claim info received:', claimData)
+      setClaimInfo(claimData)
       setCanClaim(info[4])
+      
+      if (info[4]) {
+        console.log('✅ Address is eligible to claim')
+      } else {
+        console.log('❌ Address is not eligible to claim')
+        if (claimData.claimedToday) {
+          console.log('Reason: Already claimed today')
+        } else if (parseInt(claimData.totalClaims) >= 3) {
+          console.log('Reason: Max lifetime claims reached')
+        } else {
+          console.log('Reason: Contract has insufficient balance')
+        }
+      }
     } catch (error) {
       console.error('Error verifying address:', error)
-      // If we can't verify, assume eligible and let the contract handle it
-      setCanClaim(true)
-      setClaimInfo({
-        lastClaim: '0',
-        totalClaims: '0',
-        claimedToday: false,
-        remainingClaims: '3',
-        canClaimNow: true
-      })
+      setCanClaim(false)
+      setClaimInfo(null)
     }
   }
 
   const claimTokens = async () => {
     if (!destinationAddress || !ethers.isAddress(destinationAddress)) {
       setError('Please enter a valid destination address')
+      return
+    }
+
+    if (!canClaim) {
+      setError('This address is not eligible to claim tokens right now')
       return
     }
 
@@ -150,17 +158,19 @@ export default function DynamicClaimPage({ params }) {
       const signer = await provider.getSigner()
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
 
+      console.log('✅ Address verified as eligible, executing transaction...')
+
       // Try gasless transaction first
       try {
         console.log('Attempting gasless transaction...')
         await claimTokensGasless(destinationAddress, signer, contract)
-        setSuccess(`Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
+        setSuccess(`✅ Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
       } catch (gaslessError) {
         console.log('Gasless transaction failed, trying regular transaction:', gaslessError.message)
         // Fallback to regular transaction
         const tx = await contract.claimDailyTokens()
         await tx.wait()
-        setSuccess(`Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
+        setSuccess(`✅ Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
       }
       
       // Refresh claim info
@@ -170,11 +180,13 @@ export default function DynamicClaimPage({ params }) {
       
       // Handle specific contract errors
       if (error.message.includes('AlreadyClaimedToday')) {
-        setError('This address has already claimed tokens today. Try again tomorrow!')
+        setError('❌ This address has already claimed tokens today. Try again tomorrow!')
       } else if (error.message.includes('MaxLifetimeClaimsReached')) {
-        setError('This address has reached the maximum lifetime claims (3 times)')
+        setError('❌ This address has reached the maximum lifetime claims (3 times)')
+      } else if (error.message.includes('InsufficientTokenBalance')) {
+        setError('❌ Contract has insufficient token balance. Please try again later.')
       } else {
-        setError('Failed to claim tokens: ' + error.message)
+        setError('❌ Failed to claim tokens: ' + error.message)
       }
     } finally {
       setLoading(false)
@@ -295,9 +307,9 @@ export default function DynamicClaimPage({ params }) {
             {/* Claim Button */}
             <button
               onClick={claimTokens}
-              disabled={loading}
+              disabled={loading || !canClaim}
               className={`w-full py-4 px-6 rounded-lg font-semibold transition-all duration-200 ${
-                loading
+                loading || !canClaim
                   ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                   : 'btn-primary'
               }`}
@@ -309,6 +321,27 @@ export default function DynamicClaimPage({ params }) {
               <p className="text-yellow-400 text-sm mt-2 text-center">
                 Checking claim eligibility...
               </p>
+            )}
+
+            {claimInfo && !canClaim && (
+              <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm text-center font-medium">
+                  {claimInfo.claimedToday 
+                    ? '❌ This address has already claimed tokens today. Try again tomorrow!' 
+                    : parseInt(claimInfo.totalClaims) >= 3 
+                      ? '❌ This address has reached the maximum lifetime claims (3 times)'
+                      : '❌ This address cannot claim tokens right now (insufficient contract balance)'
+                  }
+                </p>
+              </div>
+            )}
+
+            {claimInfo && canClaim && (
+              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <p className="text-green-400 text-sm text-center font-medium">
+                  ✅ This address is eligible to claim 25,000 CCOP tokens!
+                </p>
+              </div>
             )}
           </div>
         )}
