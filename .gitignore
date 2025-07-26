@@ -28,6 +28,8 @@ scripts/deploy-mainnet-with-key.js
 scripts/deploy-mainnet-fixed.js
 production-wallet-backup.txt
 production-env-template.txt
+WALLET_RECOVERY.md
+env.production.example
 
 # IDE
 .vscode/
