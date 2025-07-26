@@ -11,6 +11,8 @@ const nextConfig = {
   },
   // Ensure proper static file handling
   trailingSlash: false,
+  // Output configuration for Vercel
+  output: 'standalone',
   // Handle API routes properly
   async rewrites() {
     return [
@@ -24,6 +26,10 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_NETWORK_ID: process.env.NEXT_PUBLIC_NETWORK_ID || '42220',
     NEXT_PUBLIC_NETWORK_NAME: process.env.NEXT_PUBLIC_NETWORK_NAME || 'Celo',
+  },
+  // Experimental features for better Vercel compatibility
+  experimental: {
+    serverComponentsExternalPackages: ['@celo/contractkit'],
   },
 };
 

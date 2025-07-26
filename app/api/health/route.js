@@ -7,7 +7,13 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
       networkId: process.env.NEXT_PUBLIC_NETWORK_ID || '42220',
-      networkName: process.env.NEXT_PUBLIC_NETWORK_NAME || 'Celo'
+      networkName: process.env.NEXT_PUBLIC_NETWORK_NAME || 'Celo',
+      version: '1.0.0',
+      endpoints: {
+        health: '/api/health',
+        scanDetected: '/api/scan-detected',
+        root: '/api'
+      }
     })
   } catch (error) {
     console.error('Health check error:', error)
@@ -17,4 +23,15 @@ export async function GET() {
       timestamp: new Date().toISOString()
     }, { status: 500 })
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
 } 
