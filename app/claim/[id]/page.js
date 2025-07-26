@@ -152,12 +152,12 @@ export default function DynamicClaimPage({ params }) {
 
   const claimTokens = async () => {
     if (!destinationAddress || !ethers.isAddress(destinationAddress)) {
-      setError('Please enter a valid destination address')
+      setError('Por favor ingresa una dirección de destino válida')
       return
     }
 
     if (!canClaim) {
-      setError('This address is not eligible to claim tokens right now')
+      setError('Esta dirección no es elegible para reclamar tokens en este momento')
       return
     }
 
@@ -172,17 +172,27 @@ export default function DynamicClaimPage({ params }) {
       const contract = getContractWithSigner()
       const signer = getSigner()
 
-      // Try gasless transaction first
+      // Execute transaction to send tokens to the specified address
       try {
-        console.log('Attempting gasless transaction...')
-        await claimTokensGasless(destinationAddress, signer, contract)
-        setSuccess(`✅ Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
-      } catch (gaslessError) {
-        console.log('Gasless transaction failed, trying regular transaction:', gaslessError.message)
-        // Fallback to regular transaction
-        const tx = await contract.claimDailyTokens()
-        await tx.wait()
-        setSuccess(`✅ Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
+        console.log('Executing transaction for address:', destinationAddress)
+        
+        // For now, we'll use a direct transfer approach
+        // This requires the contract to have a function that allows the owner to send tokens
+        // Since the current contract doesn't have this, we'll show an error
+        
+        setError('❌ El diseño actual del contrato requiere firma del usuario. Por favor contacta soporte para agregar función de transferencia del propietario.')
+        return
+        
+        // TODO: Implementar función de transferencia del propietario en el contrato
+        // const tx = await claimTokensGasless(destinationAddress, signer, contract)
+        // const receipt = await tx.wait()
+        // const txHash = receipt.hash
+        // const celoscanUrl = getCeloscanUrl(txHash)
+        // const shortHash = formatTransactionHash(txHash)
+        // setSuccess(`✅ ¡Tokens CCOP reclamados exitosamente para ${destinationAddress}! Transacción: ${shortHash} | ${celoscanUrl}`)
+      } catch (error) {
+        console.error('Transaction failed:', error)
+        throw error
       }
       
       // Refresh claim info
@@ -192,13 +202,13 @@ export default function DynamicClaimPage({ params }) {
       
       // Handle specific contract errors
       if (error.message.includes('AlreadyClaimedToday')) {
-        setError('❌ This address has already claimed tokens today. Try again tomorrow!')
+        setError('❌ Esta dirección ya reclamó tokens hoy. ¡Inténtalo de nuevo mañana!')
       } else if (error.message.includes('MaxLifetimeClaimsReached')) {
-        setError('❌ This address has reached the maximum lifetime claims (3 times)')
+        setError('❌ Esta dirección ha alcanzado el máximo de reclamaciones de por vida (3 veces)')
       } else if (error.message.includes('InsufficientTokenBalance')) {
-        setError('❌ Contract has insufficient token balance. Please try again later.')
+        setError('❌ El contrato tiene balance insuficiente de tokens. Por favor inténtalo más tarde.')
       } else {
-        setError('❌ Failed to claim tokens: ' + error.message)
+        setError('❌ Error al reclamar tokens: ' + error.message)
       }
     } finally {
       setLoading(false)
@@ -213,8 +223,13 @@ export default function DynamicClaimPage({ params }) {
       [userAddress, deadline, CONTRACT_ADDRESS]
     ))
     
-    // Sign the message
+    // Sign the message as if it were the user (this is the issue - we need the user's signature)
     const signature = await signer.signMessage(ethers.getBytes(messageHash))
+    
+    console.log('Executing gasless transaction with:')
+    console.log('User Address:', userAddress)
+    console.log('Deadline:', deadline)
+    console.log('Signature:', signature)
     
     // Execute gasless transaction
     const tx = await contract.claimDailyTokensGasless(userAddress, deadline, signature)
@@ -229,6 +244,20 @@ export default function DynamicClaimPage({ params }) {
     } catch (error) {
       console.error('Failed to copy:', error)
     }
+  }
+
+  const getCeloscanUrl = (txHash) => {
+    const networkId = process.env.NEXT_PUBLIC_NETWORK_ID || '44787' // Alfajores testnet
+    if (networkId === '42220') {
+      return `https://celoscan.io/tx/${txHash}` // Mainnet
+    } else {
+      return `https://alfajores.celoscan.io/tx/${txHash}` // Testnet
+    }
+  }
+
+  const formatTransactionHash = (txHash) => {
+    if (!txHash) return ''
+    return `${txHash.slice(0, 6)}...${txHash.slice(-4)}`
   }
 
   // Auto-verify when address changes
@@ -252,8 +281,8 @@ export default function DynamicClaimPage({ params }) {
               <ArrowLeftIcon className="w-6 h-6" />
             </a>
             <div>
-              <h1 className="text-3xl font-bold text-gradient">Claim CCOP Tokens</h1>
-              <p className="text-gray-300">CCOP Token Claim System - Alfajores Testnet</p>
+              <h1 className="text-3xl font-bold text-gradient">Reclamar Tokens CCOP</h1>
+              <p className="text-gray-300">Sistema de Reclamación de Tokens CCOP</p>
             </div>
           </div>
         </div>
@@ -265,11 +294,11 @@ export default function DynamicClaimPage({ params }) {
 
         {/* Destination Address Input */}
         <div className="card mb-8">
-          <h3 className="text-xl font-semibold mb-4">Enter Destination Address</h3>
+          <h3 className="text-xl font-semibold mb-4">Ingresar Dirección de Destino</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Where do you want to receive the CCOP tokens?
+                ¿Dónde quieres recibir los tokens CCOP?
               </label>
               <input
                 type="text"
@@ -279,7 +308,7 @@ export default function DynamicClaimPage({ params }) {
                 className="input-field w-full"
               />
               <p className="text-sm text-gray-400 mt-2">
-                Paste the address where you want to receive the 25,000 CCOP tokens
+                Pega la dirección donde quieres recibir los 25,000 tokens CCOP
               </p>
             </div>
           </div>
@@ -288,28 +317,28 @@ export default function DynamicClaimPage({ params }) {
         {/* Claim Button - Always visible when address is valid */}
         {destinationAddress && ethers.isAddress(destinationAddress) && (
           <div className="card mb-8">
-            <h3 className="text-xl font-semibold mb-4">Claim Tokens</h3>
+            <h3 className="text-xl font-semibold mb-4">Reclamar Tokens</h3>
             
             {/* Claim Status Info */}
             {claimInfo && (
               <div className="bg-white/5 rounded-lg p-4 space-y-3 mb-6">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-400">Claims Used:</span>
+                    <span className="text-gray-400">Reclamaciones Usadas:</span>
                     <p className="font-medium">{claimInfo.totalClaims}/3</p>
                   </div>
                   <div>
-                    <span className="text-gray-400">Remaining Claims:</span>
+                    <span className="text-gray-400">Reclamaciones Restantes:</span>
                     <p className="font-medium">{claimInfo.remainingClaims}</p>
                   </div>
                   <div>
-                    <span className="text-gray-400">Claimed Today:</span>
-                    <p className="font-medium">{claimInfo.claimedToday ? 'Yes' : 'No'}</p>
+                    <span className="text-gray-400">Reclamado Hoy:</span>
+                    <p className="font-medium">{claimInfo.claimedToday ? 'Sí' : 'No'}</p>
                   </div>
                   <div>
-                    <span className="text-gray-400">Can Claim Now:</span>
+                    <span className="text-gray-400">Puede Reclamar Ahora:</span>
                     <p className={`font-medium ${canClaim ? 'text-green-400' : 'text-red-400'}`}>
-                      {canClaim ? 'Yes' : 'No'}
+                      {canClaim ? 'Sí' : 'No'}
                     </p>
                   </div>
                 </div>
@@ -326,12 +355,25 @@ export default function DynamicClaimPage({ params }) {
                   : 'btn-primary'
               }`}
             >
-              {loading ? 'Processing Transaction...' : 'Claim 25,000 CCOP Tokens'}
+              {loading ? 'Procesando Transacción...' : 'Reclamar 25,000 Tokens CCOP'}
+            </button>
+
+            {/* Test Success Message Button (Temporary) */}
+            <button
+              onClick={() => {
+                const testTxHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+                const celoscanUrl = getCeloscanUrl(testTxHash)
+                const shortHash = formatTransactionHash(testTxHash)
+                setSuccess(`✅ ¡Tokens CCOP reclamados exitosamente para ${destinationAddress}! Transacción: ${shortHash} | ${celoscanUrl}`)
+              }}
+              className="w-full mt-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+            >
+              🧪 Probar Mensaje de Éxito
             </button>
 
             {!claimInfo && (
               <p className="text-yellow-400 text-sm mt-2 text-center">
-                Checking claim eligibility...
+                Verificando elegibilidad de reclamación...
               </p>
             )}
 
@@ -339,10 +381,10 @@ export default function DynamicClaimPage({ params }) {
               <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
                 <p className="text-red-400 text-sm text-center font-medium">
                   {claimInfo.claimedToday 
-                    ? '❌ This address has already claimed tokens today. Try again tomorrow!' 
+                    ? '❌ Esta dirección ya reclamó tokens hoy. ¡Inténtalo de nuevo mañana!' 
                     : parseInt(claimInfo.totalClaims) >= 3 
-                      ? '❌ This address has reached the maximum lifetime claims (3 times)'
-                      : '❌ This address cannot claim tokens right now (insufficient contract balance)'
+                      ? '❌ Esta dirección ha alcanzado el máximo de reclamaciones de por vida (3 veces)'
+                      : '❌ Esta dirección no puede reclamar tokens ahora (balance insuficiente del contrato)'
                   }
                 </p>
               </div>
@@ -351,7 +393,7 @@ export default function DynamicClaimPage({ params }) {
             {claimInfo && canClaim && (
               <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <p className="text-green-400 text-sm text-center font-medium">
-                  ✅ This address is eligible to claim 25,000 CCOP tokens!
+                  ✅ ¡Esta dirección es elegible para reclamar 25,000 tokens CCOP!
                 </p>
               </div>
             )}
@@ -370,8 +412,20 @@ export default function DynamicClaimPage({ params }) {
 
         {success && (
           <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg max-w-md">
-            <p className="font-medium">Success</p>
-            <p className="text-sm">{success}</p>
+            <p className="font-medium">✅ ¡Transacción Exitosa!</p>
+            <p className="text-sm mb-2">{success}</p>
+            {success.includes('Transacción:') && (
+              <div className="mt-2">
+                <a 
+                  href={success.split('|')[1]?.trim() || '#'} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-200 hover:text-blue-100 underline text-xs"
+                >
+                  🔗 Ver en Celoscan
+                </a>
+              </div>
+            )}
           </div>
         )}
       </main>

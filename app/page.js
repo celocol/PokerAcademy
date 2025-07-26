@@ -86,11 +86,11 @@ export default function Home() {
           <div className="text-center mb-8">
             <div className="flex justify-between items-center mb-4">
               <div></div>
-              <h1 className="text-4xl font-bold text-gradient">CCOP Dispenser</h1>
+              <h1 className="text-4xl font-bold text-gradient">Dispensador CCOP</h1>
               <button
                 onClick={toggleFullscreen}
                 className="p-2 text-celo-primary hover:text-green-400 transition-colors"
-                title={isFullscreen ? "Salir pantalla completa" : "Pantalla completa"}
+                title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
               >
                 {isFullscreen ? (
                   <ArrowsPointingInIcon className="w-6 h-6" />
@@ -99,7 +99,7 @@ export default function Home() {
                 )}
               </button>
             </div>
-            <p className="text-gray-300 text-lg">Escanea el QR para reclamar tus tokens CCOP</p>
+            <p className="text-gray-300 text-lg">Escanea el código QR para reclamar tus tokens CCOP</p>
           </div>
 
           {/* QR Code Card */}
