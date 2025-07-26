@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-// Store the last scan time
+// Store the last scan time in memory (will reset on server restart)
 let lastScanTime = null
 
 export async function POST(request) {
@@ -28,7 +28,15 @@ export async function POST(request) {
 }
 
 export async function GET() {
-  return NextResponse.json({ 
-    lastScanTime: lastScanTime?.toISOString() || null 
-  })
+  try {
+    return NextResponse.json({ 
+      lastScanTime: lastScanTime?.toISOString() || null 
+    })
+  } catch (error) {
+    console.error('Error in GET /api/scan-detected:', error)
+    return NextResponse.json({ 
+      lastScanTime: null,
+      error: error.message 
+    }, { status: 500 })
+  }
 } 
