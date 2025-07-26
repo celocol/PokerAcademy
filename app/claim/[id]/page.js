@@ -1,0 +1,349 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { ethers } from 'ethers'
+import { 
+  DocumentDuplicateIcon as CopyIcon, 
+  CheckIcon, 
+  ArrowLeftIcon 
+} from '@heroicons/react/24/outline'
+
+// Contract ABI (simplified for the main functions)
+const CONTRACT_ABI = [
+  "function claimDailyTokens() external",
+  "function claimDailyTokensGasless(address user, uint256 deadline, bytes calldata signature) external",
+  "function getUserClaimInfo(address user) external view returns (uint256, uint256, bool, uint256, bool)",
+  "function getTimeUntilNextClaim(address user) external view returns (uint256)",
+  "function getContractBalance() external view returns (uint256)",
+  "function getTokenInfo() external view returns (address, string, string, uint256)",
+  "function ccopToken() external view returns (address)"
+]
+
+export default function DynamicClaimPage({ params }) {
+  const [destinationAddress, setDestinationAddress] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [canClaim, setCanClaim] = useState(false)
+  const [claimInfo, setClaimInfo] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const [sessionId, setSessionId] = useState('')
+
+  // Contract address - replace with your deployed contract address
+  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000'
+
+  useEffect(() => {
+    // Generate a unique session ID for this claim attempt
+    const uniqueId = `${params.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    setSessionId(uniqueId)
+    
+    console.log(`🎯 New claim session: ${uniqueId}`)
+    
+    // Notify that this QR was scanned
+    const notifyScan = async () => {
+      try {
+        await fetch('/api/scan-detected', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sessionId: uniqueId
+          })
+        })
+      } catch (error) {
+        console.error('Error notifying scan:', error)
+      }
+    }
+    
+    notifyScan()
+  }, [params.id])
+
+  const getProvider = () => {
+    if (typeof window.ethereum !== 'undefined') {
+      return new ethers.BrowserProvider(window.ethereum)
+    }
+    return null
+  }
+
+  const getContract = () => {
+    const provider = getProvider()
+    if (!provider) return null
+    
+    return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider)
+  }
+
+  const verifyAddress = async (address) => {
+    if (!address || !ethers.isAddress(address)) {
+      setCanClaim(false)
+      setClaimInfo(null)
+      return
+    }
+
+    try {
+      const contract = getContract()
+      if (!contract) return
+
+      const info = await contract.getUserClaimInfo(address)
+      
+      setClaimInfo({
+        lastClaim: info[0].toString(),
+        totalClaims: info[1].toString(),
+        claimedToday: info[2],
+        remainingClaims: info[3].toString(),
+        canClaimNow: info[4]
+      })
+      
+      setCanClaim(info[4])
+    } catch (error) {
+      console.error('Error verifying address:', error)
+      setCanClaim(false)
+      setClaimInfo(null)
+    }
+  }
+
+  const claimTokens = async () => {
+    if (!destinationAddress || !ethers.isAddress(destinationAddress)) {
+      setError('Please enter a valid destination address')
+      return
+    }
+
+    if (!canClaim) {
+      setError('This address cannot claim tokens right now')
+      return
+    }
+
+    if (typeof window.ethereum === 'undefined') {
+      setError('Please install MetaMask or another Web3 wallet')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError('')
+      setSuccess('')
+
+      // Request account access
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      })
+      
+      if (accounts.length === 0) {
+        setError('Please connect your wallet to claim tokens')
+        return
+      }
+
+      const provider = getProvider()
+      const signer = await provider.getSigner()
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+
+      // Try gasless transaction first
+      try {
+        await claimTokensGasless(destinationAddress, signer, contract)
+      } catch (gaslessError) {
+        console.log('Gasless transaction failed, trying regular transaction:', gaslessError.message)
+        // Fallback to regular transaction
+        const tx = await contract.claimDailyTokens()
+        await tx.wait()
+      }
+
+      setSuccess(`Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
+      
+      // Refresh claim info
+      await verifyAddress(destinationAddress)
+    } catch (error) {
+      console.error('Error claiming tokens:', error)
+      
+      // Handle specific contract errors
+      if (error.message.includes('AlreadyClaimedToday')) {
+        setError('This address has already claimed tokens today. Try again tomorrow!')
+      } else if (error.message.includes('MaxLifetimeClaimsReached')) {
+        setError('This address has reached the maximum lifetime claims (3 times)')
+      } else {
+        setError('Failed to claim tokens: ' + error.message)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const claimTokensGasless = async (userAddress, signer, contract) => {
+    // Create the message hash
+    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+    const messageHash = ethers.keccak256(ethers.solidityPacked(
+      ["address", "uint256", "address"],
+      [userAddress, deadline, CONTRACT_ADDRESS]
+    ))
+    
+    // Sign the message
+    const signature = await signer.signMessage(ethers.getBytes(messageHash))
+    
+    // Execute gasless transaction
+    const tx = await contract.claimDailyTokensGasless(userAddress, deadline, signature)
+    await tx.wait()
+  }
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }
+
+  // Auto-verify when address changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      verifyAddress(destinationAddress)
+    }, 500) // Debounce for 500ms
+
+    return () => clearTimeout(timeoutId)
+  }, [destinationAddress])
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-celo-dark via-gray-900 to-black">
+      <header className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <a 
+              href="/" 
+              className="text-celo-primary hover:text-green-400 transition-colors"
+            >
+              <ArrowLeftIcon className="w-6 h-6" />
+            </a>
+            <div>
+              <h1 className="text-3xl font-bold text-gradient">Claim CCOP Tokens</h1>
+              <p className="text-gray-300">CCOP Token Claim System</p>
+              <p className="text-sm text-celo-primary">Session: {sessionId}</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8 max-w-md">
+        
+        {/* Welcome Card */}
+        <div className="card mb-8">
+          <h2 className="text-2xl font-semibold mb-4">CCOP Token Claim</h2>
+          <div className="space-y-3 text-gray-300 text-sm">
+            <p>🎯 <strong>Daily Claim:</strong> 25,000 CCOP tokens once per day</p>
+            <p>⏰ <strong>Reset Time:</strong> Midnight UTC (0:00)</p>
+            <p>🎲 <strong>Lifetime Limit:</strong> Maximum 3 claims per wallet</p>
+            <p>💰 <strong>Network:</strong> Celo Blockchain</p>
+            <p>🆔 <strong>Session ID:</strong> {sessionId}</p>
+          </div>
+        </div>
+
+        {/* Destination Address Input */}
+        <div className="card mb-8">
+          <h3 className="text-xl font-semibold mb-4">Enter Destination Address</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Where do you want to receive the CCOP tokens?
+              </label>
+              <input
+                type="text"
+                placeholder="0x..."
+                value={destinationAddress}
+                onChange={(e) => setDestinationAddress(e.target.value)}
+                className="input-field w-full"
+              />
+              <p className="text-sm text-gray-400 mt-2">
+                Paste the address where you want to receive the 25,000 CCOP tokens
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Claim Status */}
+        {claimInfo && (
+          <div className="card mb-8">
+            <h3 className="text-xl font-semibold mb-4">Claim Status</h3>
+            
+            <div className="bg-white/5 rounded-lg p-4 space-y-3 mb-6">
+              <h4 className="font-semibold text-celo-primary">Address: {destinationAddress}</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-400">Claims Used:</span>
+                  <p className="font-medium">{claimInfo.totalClaims}/3</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Remaining Claims:</span>
+                  <p className="font-medium">{claimInfo.remainingClaims}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Claimed Today:</span>
+                  <p className="font-medium">{claimInfo.claimedToday ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Can Claim Now:</span>
+                  <p className={`font-medium ${canClaim ? 'text-green-400' : 'text-red-400'}`}>
+                    {canClaim ? 'Yes' : 'No'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Claim Button */}
+            <button
+              onClick={claimTokens}
+              disabled={loading || !canClaim}
+              className={`w-full py-4 px-6 rounded-lg font-semibold transition-all duration-200 ${
+                loading || !canClaim
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'btn-primary'
+              }`}
+            >
+              {loading ? 'Claiming...' : 'Claim 25,000 CCOP Tokens'}
+            </button>
+
+            {!canClaim && claimInfo && (
+              <p className="text-red-400 text-sm mt-2 text-center">
+                {claimInfo.claimedToday 
+                  ? 'This address has already claimed tokens today. Try again tomorrow!' 
+                  : claimInfo.totalClaims >= 3 
+                    ? 'This address has reached the maximum lifetime claims (3 times)'
+                    : 'This address cannot claim tokens right now.'
+                }
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Contract Address */}
+        <div className="card">
+          <p className="text-sm text-gray-400 mb-2">Contract Address:</p>
+          <div className="flex items-center space-x-2">
+            <code className="text-xs bg-black/20 px-2 py-1 rounded flex-1">
+              {CONTRACT_ADDRESS}
+            </code>
+            <button
+              onClick={() => copyToClipboard(CONTRACT_ADDRESS)}
+              className="p-1 text-gray-400 hover:text-white transition-colors"
+            >
+              {copied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Error and Success Messages */}
+        {error && (
+          <div className="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg max-w-md">
+            <p className="font-medium">Error</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {success && (
+          <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg max-w-md">
+            <p className="font-medium">Success</p>
+            <p className="text-sm">{success}</p>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+} 
