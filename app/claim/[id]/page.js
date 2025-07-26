@@ -216,7 +216,6 @@ export default function DynamicClaimPage({ params }) {
             <div>
               <h1 className="text-3xl font-bold text-gradient">Claim CCOP Tokens</h1>
               <p className="text-gray-300">CCOP Token Claim System - Alfajores Testnet</p>
-              <p className="text-sm text-celo-primary">Session: {sessionId}</p>
             </div>
           </div>
         </div>
@@ -224,17 +223,7 @@ export default function DynamicClaimPage({ params }) {
 
       <main className="container mx-auto px-4 py-8 max-w-md">
         
-        {/* Welcome Card */}
-        <div className="card mb-8">
-          <h2 className="text-2xl font-semibold mb-4">CCOP Token Claim</h2>
-          <div className="space-y-3 text-gray-300 text-sm">
-            <p>🎯 <strong>Daily Claim:</strong> 25,000 CCOP tokens once per day</p>
-            <p>⏰ <strong>Reset Time:</strong> Midnight UTC (0:00)</p>
-            <p>🎲 <strong>Lifetime Limit:</strong> Maximum 3 claims per wallet</p>
-            <p>💰 <strong>Network:</strong> Celo Alfajores (Testnet)</p>
-            <p>🆔 <strong>Session ID:</strong> {sessionId}</p>
-          </div>
-        </div>
+
 
         {/* Destination Address Input */}
         <div className="card mb-8">
@@ -258,34 +247,36 @@ export default function DynamicClaimPage({ params }) {
           </div>
         </div>
 
-        {/* Claim Status */}
-        {claimInfo && (
+        {/* Claim Button - Always visible when address is valid */}
+        {destinationAddress && ethers.isAddress(destinationAddress) && (
           <div className="card mb-8">
-            <h3 className="text-xl font-semibold mb-4">Claim Status</h3>
+            <h3 className="text-xl font-semibold mb-4">Claim Tokens</h3>
             
-            <div className="bg-white/5 rounded-lg p-4 space-y-3 mb-6">
-              <h4 className="font-semibold text-celo-primary">Address: {destinationAddress}</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-400">Claims Used:</span>
-                  <p className="font-medium">{claimInfo.totalClaims}/3</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">Remaining Claims:</span>
-                  <p className="font-medium">{claimInfo.remainingClaims}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">Claimed Today:</span>
-                  <p className="font-medium">{claimInfo.claimedToday ? 'Yes' : 'No'}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">Can Claim Now:</span>
-                  <p className={`font-medium ${canClaim ? 'text-green-400' : 'text-red-400'}`}>
-                    {canClaim ? 'Yes' : 'No'}
-                  </p>
+            {/* Claim Status Info */}
+            {claimInfo && (
+              <div className="bg-white/5 rounded-lg p-4 space-y-3 mb-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-400">Claims Used:</span>
+                    <p className="font-medium">{claimInfo.totalClaims}/3</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Remaining Claims:</span>
+                    <p className="font-medium">{claimInfo.remainingClaims}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Claimed Today:</span>
+                    <p className="font-medium">{claimInfo.claimedToday ? 'Yes' : 'No'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Can Claim Now:</span>
+                    <p className={`font-medium ${canClaim ? 'text-green-400' : 'text-red-400'}`}>
+                      {canClaim ? 'Yes' : 'No'}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Claim Button */}
             <button
@@ -310,24 +301,16 @@ export default function DynamicClaimPage({ params }) {
                 }
               </p>
             )}
+
+            {!claimInfo && (
+              <p className="text-yellow-400 text-sm mt-2 text-center">
+                Checking claim eligibility...
+              </p>
+            )}
           </div>
         )}
 
-        {/* Contract Address */}
-        <div className="card">
-          <p className="text-sm text-gray-400 mb-2">Contract Address:</p>
-          <div className="flex items-center space-x-2">
-            <code className="text-xs bg-black/20 px-2 py-1 rounded flex-1">
-              {CONTRACT_ADDRESS}
-            </code>
-            <button
-              onClick={() => copyToClipboard(CONTRACT_ADDRESS)}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              {copied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
+
 
         {/* Error and Success Messages */}
         {error && (

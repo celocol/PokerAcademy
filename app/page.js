@@ -158,49 +158,19 @@ export default function Home() {
                   <ol className="text-sm text-gray-300 space-y-1 text-left">
                     <li>1. 📱 Abre la cámara de tu celular</li>
                     <li>2. 🔍 Escanea el código QR</li>
-                    <li>3. 💰 Conecta tu wallet</li>
+                    <li>3. 💰 Copia y pega la dirección de tu wallet</li>
                     <li>4. 🎯 Reclama 25,000 CCOP tokens</li>
                   </ol>
                 </div>
                 
-                <div className="bg-celo-secondary/10 border border-celo-secondary/20 rounded-lg p-4">
-                  <h3 className="font-semibold text-celo-secondary mb-2">Información:</h3>
-                  <ul className="text-sm text-gray-300 space-y-1 text-left">
-                    <li>• 🎯 25,000 CCOP por día</li>
-                    <li>• ⏰ Reset a medianoche UTC</li>
-                    <li>• 🎲 Máximo 3 reclamaciones por vida</li>
-                    <li>• 🌐 Red: Celo Alfajores (Testnet)</li>
-                  </ul>
-                </div>
+
               </div>
 
-              {/* Direct Link */}
-              <div className="w-full">
-                <p className="text-gray-400 mb-2 text-center">O usa este enlace directo:</p>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={claimUrl || '/claim'}
-                    readOnly
-                    className="input-field flex-1 text-sm"
-                  />
-                  <button
-                    onClick={() => copyToClipboard(claimUrl || '/claim')}
-                    className="p-2 text-gray-400 hover:text-white transition-colors bg-white/5 rounded-lg"
-                  >
-                    {copied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="text-center mt-8">
-            <p className="text-gray-400 text-sm">
-              Token CCOP: 0x8A567e2aE79CA692Bd748aB832081C45de4041eA
-            </p>
-          </div>
+
         </div>
       </div>
     </div>
