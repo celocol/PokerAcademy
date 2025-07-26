@@ -82,7 +82,18 @@ export default function DynamicClaimPage({ params }) {
 
     try {
       const contract = getContract()
-      if (!contract) return
+      if (!contract) {
+        console.log('No provider available, assuming eligible for manual claim')
+        setCanClaim(true)
+        setClaimInfo({
+          lastClaim: '0',
+          totalClaims: '0',
+          claimedToday: false,
+          remainingClaims: '3',
+          canClaimNow: true
+        })
+        return
+      }
 
       const info = await contract.getUserClaimInfo(address)
       
@@ -97,19 +108,21 @@ export default function DynamicClaimPage({ params }) {
       setCanClaim(info[4])
     } catch (error) {
       console.error('Error verifying address:', error)
-      setCanClaim(false)
-      setClaimInfo(null)
+      // If we can't verify, assume eligible and let the contract handle it
+      setCanClaim(true)
+      setClaimInfo({
+        lastClaim: '0',
+        totalClaims: '0',
+        claimedToday: false,
+        remainingClaims: '3',
+        canClaimNow: true
+      })
     }
   }
 
   const claimTokens = async () => {
     if (!destinationAddress || !ethers.isAddress(destinationAddress)) {
       setError('Please enter a valid destination address')
-      return
-    }
-
-    if (!canClaim) {
-      setError('This address cannot claim tokens right now')
       return
     }
 
@@ -139,15 +152,16 @@ export default function DynamicClaimPage({ params }) {
 
       // Try gasless transaction first
       try {
+        console.log('Attempting gasless transaction...')
         await claimTokensGasless(destinationAddress, signer, contract)
+        setSuccess(`Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
       } catch (gaslessError) {
         console.log('Gasless transaction failed, trying regular transaction:', gaslessError.message)
         // Fallback to regular transaction
         const tx = await contract.claimDailyTokens()
         await tx.wait()
+        setSuccess(`Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
       }
-
-      setSuccess(`Successfully claimed 25,000 CCOP tokens for ${destinationAddress}! Session: ${sessionId}`)
       
       // Refresh claim info
       await verifyAddress(destinationAddress)
@@ -281,26 +295,15 @@ export default function DynamicClaimPage({ params }) {
             {/* Claim Button */}
             <button
               onClick={claimTokens}
-              disabled={loading || !canClaim}
+              disabled={loading}
               className={`w-full py-4 px-6 rounded-lg font-semibold transition-all duration-200 ${
-                loading || !canClaim
+                loading
                   ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                   : 'btn-primary'
               }`}
             >
               {loading ? 'Claiming...' : 'Claim 25,000 CCOP Tokens'}
             </button>
-
-            {!canClaim && claimInfo && (
-              <p className="text-red-400 text-sm mt-2 text-center">
-                {claimInfo.claimedToday 
-                  ? 'This address has already claimed tokens today. Try again tomorrow!' 
-                  : claimInfo.totalClaims >= 3 
-                    ? 'This address has reached the maximum lifetime claims (3 times)'
-                    : 'This address cannot claim tokens right now.'
-                }
-              </p>
-            )}
 
             {!claimInfo && (
               <p className="text-yellow-400 text-sm mt-2 text-center">
