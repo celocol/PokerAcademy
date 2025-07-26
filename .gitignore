@@ -22,6 +22,13 @@ artifacts/
 typechain/
 typechain-types/
 
+# Production wallet generation (TEMPORAL - NO committear)
+scripts/generate-production-wallet.js
+scripts/deploy-mainnet-with-key.js
+scripts/deploy-mainnet-fixed.js
+production-wallet-backup.txt
+production-env-template.txt
+
 # IDE
 .vscode/
 .idea/

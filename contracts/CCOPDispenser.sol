@@ -21,6 +21,7 @@ contract CCOPDispenser is Ownable, ReentrancyGuard {
     uint256 public constant DAILY_CLAIM_AMOUNT = 25000 * 10**18; // 25,000 CCOP tokens with 18 decimals
     uint256 public constant MAX_LIFETIME_CLAIMS = 3;
     uint256 public constant SECONDS_PER_DAY = 86400;
+    uint256 public constant UTC_OFFSET_COLOMBIA = 5 * 3600; // UTC-5 (Colombia timezone)
     
     // State variables
     mapping(address => uint256) public lastClaimTime;
@@ -49,7 +50,7 @@ contract CCOPDispenser is Ownable, ReentrancyGuard {
     
     /**
      * @dev Allows users to claim their daily CCOP tokens (requires gas)
-     * Can only claim once per day (resets at midnight UTC)
+     * Can only claim once per day (resets at midnight UTC-5 Colombia time)
      * Maximum 3 claims per lifetime
      */
     function claimDailyTokens() external nonReentrant {
@@ -140,11 +141,15 @@ contract CCOPDispenser is Ownable, ReentrancyGuard {
     }
     
     /**
-     * @dev Check if two timestamps are on the same day (UTC)
+     * @dev Check if two timestamps are on the same day (UTC-5 Colombia time)
      */
     function _isSameDay(uint256 timestamp1, uint256 timestamp2) internal pure returns (bool) {
-        uint256 day1 = timestamp1 / SECONDS_PER_DAY;
-        uint256 day2 = timestamp2 / SECONDS_PER_DAY;
+        // Convert to Colombia time (UTC-5)
+        uint256 colombiaTime1 = timestamp1 + UTC_OFFSET_COLOMBIA;
+        uint256 colombiaTime2 = timestamp2 + UTC_OFFSET_COLOMBIA;
+        
+        uint256 day1 = colombiaTime1 / SECONDS_PER_DAY;
+        uint256 day2 = colombiaTime2 / SECONDS_PER_DAY;
         return day1 == day2;
     }
     
@@ -199,11 +204,13 @@ contract CCOPDispenser is Ownable, ReentrancyGuard {
             return 0; // Can claim now
         }
         
-        // Calculate time until next day (midnight UTC)
-        uint256 currentDay = currentTime / SECONDS_PER_DAY;
-        uint256 nextDay = (currentDay + 1) * SECONDS_PER_DAY;
+        // Calculate time until next day (midnight UTC-5 Colombia time)
+        uint256 colombiaTime = currentTime + UTC_OFFSET_COLOMBIA;
+        uint256 currentDay = colombiaTime / SECONDS_PER_DAY;
+        uint256 nextDayColombia = (currentDay + 1) * SECONDS_PER_DAY;
+        uint256 nextDayUTC = nextDayColombia - UTC_OFFSET_COLOMBIA;
         
-        return nextDay - currentTime;
+        return nextDayUTC - currentTime;
     }
     
     /**
