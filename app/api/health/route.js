@@ -6,8 +6,8 @@ export async function GET() {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
-      networkId: process.env.NEXT_PUBLIC_NETWORK_ID || '42220',
-      networkName: process.env.NEXT_PUBLIC_NETWORK_NAME || 'Celo',
+      networkId: process.env.NEXT_PUBLIC_NETWORK_ID || '44787',
+      networkName: process.env.NEXT_PUBLIC_NETWORK_NAME || 'Alfajores',
       version: '1.0.0',
       endpoints: {
         health: '/api/health',

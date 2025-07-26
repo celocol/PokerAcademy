@@ -215,7 +215,7 @@ export default function DynamicClaimPage({ params }) {
             </a>
             <div>
               <h1 className="text-3xl font-bold text-gradient">Claim CCOP Tokens</h1>
-              <p className="text-gray-300">CCOP Token Claim System</p>
+              <p className="text-gray-300">CCOP Token Claim System - Alfajores Testnet</p>
               <p className="text-sm text-celo-primary">Session: {sessionId}</p>
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function DynamicClaimPage({ params }) {
             <p>🎯 <strong>Daily Claim:</strong> 25,000 CCOP tokens once per day</p>
             <p>⏰ <strong>Reset Time:</strong> Midnight UTC (0:00)</p>
             <p>🎲 <strong>Lifetime Limit:</strong> Maximum 3 claims per wallet</p>
-            <p>💰 <strong>Network:</strong> Celo Blockchain</p>
+            <p>💰 <strong>Network:</strong> Celo Alfajores (Testnet)</p>
             <p>🆔 <strong>Session ID:</strong> {sessionId}</p>
           </div>
         </div>

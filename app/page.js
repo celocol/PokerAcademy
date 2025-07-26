@@ -169,7 +169,7 @@ export default function Home() {
                     <li>• 🎯 25,000 CCOP por día</li>
                     <li>• ⏰ Reset a medianoche UTC</li>
                     <li>• 🎲 Máximo 3 reclamaciones por vida</li>
-                    <li>• 🌐 Red: Celo Blockchain</li>
+                    <li>• 🌐 Red: Celo Alfajores (Testnet)</li>
                   </ul>
                 </div>
               </div>

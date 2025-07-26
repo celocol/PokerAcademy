@@ -24,8 +24,8 @@ const nextConfig = {
   },
   // Environment variables
   env: {
-    NEXT_PUBLIC_NETWORK_ID: process.env.NEXT_PUBLIC_NETWORK_ID || '42220',
-    NEXT_PUBLIC_NETWORK_NAME: process.env.NEXT_PUBLIC_NETWORK_NAME || 'Celo',
+    NEXT_PUBLIC_NETWORK_ID: process.env.NEXT_PUBLIC_NETWORK_ID || '44787',
+    NEXT_PUBLIC_NETWORK_NAME: process.env.NEXT_PUBLIC_NETWORK_NAME || 'Alfajores',
   },
   // Experimental features for better Vercel compatibility
   experimental: {

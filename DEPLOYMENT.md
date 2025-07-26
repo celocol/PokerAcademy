@@ -9,10 +9,22 @@
 
 In your Vercel project settings, add these environment variables:
 
+### For Testnet (Alfajores):
 ```
-NEXT_PUBLIC_CONTRACT_ADDRESS=your_deployed_contract_address
+NEXT_PUBLIC_CONTRACT_ADDRESS=your_deployed_contract_address_on_alfajores
+NEXT_PUBLIC_NETWORK_ID=44787
+NEXT_PUBLIC_NETWORK_NAME=Alfajores
+NEXT_PUBLIC_RPC_URL=https://alfajores-forno.celo-testnet.org
+NEXT_PUBLIC_EXPLORER_URL=https://alfajores.celoscan.io
+```
+
+### For Mainnet (Celo):
+```
+NEXT_PUBLIC_CONTRACT_ADDRESS=your_deployed_contract_address_on_mainnet
 NEXT_PUBLIC_NETWORK_ID=42220
 NEXT_PUBLIC_NETWORK_NAME=Celo
+NEXT_PUBLIC_RPC_URL=https://forno.celo.org
+NEXT_PUBLIC_EXPLORER_URL=https://celoscan.io
 ```
 
 ## Step 2: Build Configuration
@@ -82,8 +94,10 @@ curl https://your-app.vercel.app/api/scan-detected
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
 | `NEXT_PUBLIC_CONTRACT_ADDRESS` | Deployed contract address | Yes | - |
-| `NEXT_PUBLIC_NETWORK_ID` | Celo network ID | No | 42220 |
-| `NEXT_PUBLIC_NETWORK_NAME` | Network name | No | Celo |
+| `NEXT_PUBLIC_NETWORK_ID` | Celo network ID | No | 44787 (Alfajores) |
+| `NEXT_PUBLIC_NETWORK_NAME` | Network name | No | Alfajores |
+| `NEXT_PUBLIC_RPC_URL` | RPC endpoint URL | No | https://alfajores-forno.celo-testnet.org |
+| `NEXT_PUBLIC_EXPLORER_URL` | Block explorer URL | No | https://alfajores.celoscan.io |
 
 ## Support
 
