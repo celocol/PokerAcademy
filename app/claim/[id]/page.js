@@ -66,10 +66,21 @@ export default function DynamicClaimPage({ params }) {
     return null
   }
 
+  const getPublicProvider = () => {
+    // Use Celo Alfajores testnet RPC
+    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || 'https://alfajores-forno.celo-testnet.org'
+    return new ethers.JsonRpcProvider(rpcUrl)
+  }
+
   const getContract = () => {
     const provider = getProvider()
     if (!provider) return null
     
+    return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider)
+  }
+
+  const getPublicContract = () => {
+    const provider = getPublicProvider()
     return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider)
   }
 
@@ -81,16 +92,11 @@ export default function DynamicClaimPage({ params }) {
     }
 
     try {
-      const contract = getContract()
-      if (!contract) {
-        console.log('No provider available, cannot verify eligibility')
-        setCanClaim(false)
-        setClaimInfo(null)
-        return
-      }
-
       console.log('Verifying claim eligibility for address:', address)
-      const info = await contract.getUserClaimInfo(address)
+      
+      // Try to get contract info using public provider
+      const publicContract = getPublicContract()
+      const info = await publicContract.getUserClaimInfo(address)
       
       const claimData = {
         lastClaim: info[0].toString(),
@@ -118,8 +124,16 @@ export default function DynamicClaimPage({ params }) {
       }
     } catch (error) {
       console.error('Error verifying address:', error)
-      setCanClaim(false)
-      setClaimInfo(null)
+      // If we can't verify, assume eligible and let the contract handle it
+      console.log('Could not verify eligibility, assuming eligible for manual claim')
+      setCanClaim(true)
+      setClaimInfo({
+        lastClaim: '0',
+        totalClaims: '0',
+        claimedToday: false,
+        remainingClaims: '3',
+        canClaimNow: true
+      })
     }
   }
 
