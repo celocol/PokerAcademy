@@ -184,7 +184,7 @@ export default function DynamicClaimPage({ params }) {
         const celoscanUrl = getCeloscanUrl(txHash)
         const shortHash = formatTransactionHash(txHash)
         
-        setSuccess(`✅ ¡Tokens CCOP reclamados exitosamente para ${destinationAddress}! Transacción: ${shortHash} | ${celoscanUrl}`)
+        setSuccess(`✅ ¡Pesos Digitales (cCOP) reclamados exitosamente para ${destinationAddress}! Transacción: ${shortHash} | ${celoscanUrl}`)
       } catch (error) {
         console.error('Transaction failed:', error)
         throw error
@@ -203,7 +203,7 @@ export default function DynamicClaimPage({ params }) {
       } else if (error.message.includes('InsufficientTokenBalance')) {
         setError('❌ El dispensador de tokens no tiene suficientes fondos. Por favor inténtalo más tarde.')
       } else {
-        setError('❌ Error al reclamar tokens: ' + error.message)
+        setError('❌ Error al reclamar Pesos Digitales (cCOP): ' + error.message)
       }
     } finally {
       setLoading(false)
@@ -276,8 +276,8 @@ export default function DynamicClaimPage({ params }) {
               <ArrowLeftIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </a>
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gradient">Reclamar Tokens CCOP</h1>
-              <p className="text-gray-300 text-sm sm:text-base">Sistema de Reclamación de Tokens CCOP</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gradient">Reclamar Pesos Digitales (cCOP)</h1>
+              <p className="text-gray-300 text-sm sm:text-base">Sistema de Reclamación de Pesos Digitales (cCOP)</p>
             </div>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function DynamicClaimPage({ params }) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                ¿Dónde quieres recibir los tokens CCOP?
+                ¿Dónde quieres recibir los Pesos Digitales (cCOP)?
               </label>
               <input
                 type="text"
@@ -303,7 +303,7 @@ export default function DynamicClaimPage({ params }) {
                 className="input-field w-full"
               />
               <p className="text-sm text-gray-400 mt-2">
-                Pega la dirección donde quieres recibir los 25,000 tokens CCOP
+                Pega la dirección donde quieres recibir los 25,000 Pesos Digitales (cCOP)
               </p>
             </div>
           </div>
@@ -312,7 +312,7 @@ export default function DynamicClaimPage({ params }) {
         {/* Claim Button - Always visible when address is valid */}
         {destinationAddress && ethers.isAddress(destinationAddress) && (
           <div className="card mb-8">
-            <h3 className="text-xl font-semibold mb-4">Reclamar Tokens</h3>
+            <h3 className="text-xl font-semibold mb-4">Reclamar Pesos Digitales (cCOP)</h3>
             
             {/* Claim Status Info */}
             {claimInfo && (
@@ -350,7 +350,7 @@ export default function DynamicClaimPage({ params }) {
                   : 'btn-primary'
               }`}
             >
-              {loading ? 'Procesando Transacción...' : 'Reclamar 25,000 Tokens CCOP'}
+              {loading ? 'Procesando Transacción...' : 'Reclamar 25,000 Pesos Digitales (cCOP)'}
             </button>
 
 
@@ -365,10 +365,10 @@ export default function DynamicClaimPage({ params }) {
               <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
                 <p className="text-red-400 text-sm text-center font-medium">
                   {claimInfo.claimedToday 
-                    ? '❌ Ya reclamaste tokens hoy. ¡Inténtalo de nuevo mañana!' 
+                    ? '❌ Ya reclamaste Pesos Digitales (cCOP) hoy. ¡Inténtalo de nuevo mañana!' 
                     : parseInt(claimInfo.totalClaims) >= 3 
                       ? '❌ Has alcanzado el máximo de reclamaciones de por vida (3 veces)'
-                      : '❌ El dispensador de tokens no tiene suficientes fondos. Por favor inténtalo más tarde.'
+                      : '❌ El dispensador no tiene suficientes fondos. Por favor inténtalo más tarde.'
                   }
                 </p>
               </div>
@@ -377,7 +377,7 @@ export default function DynamicClaimPage({ params }) {
             {claimInfo && canClaim && (
               <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <p className="text-green-400 text-sm text-center font-medium">
-                  ✅ ¡Puedes reclamar 25,000 tokens CCOP!
+                  ✅ ¡Puedes reclamar 25,000 Pesos Digitales (cCOP)!
                 </p>
               </div>
             )}

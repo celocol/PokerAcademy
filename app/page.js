@@ -86,7 +86,7 @@ export default function Home() {
           <div className="text-center mb-6 sm:mb-8">
             <div className="flex justify-between items-center mb-4">
               <div></div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient">Dispensador CCOP</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient">Dispensador de Pesos Digitales (cCOP)</h1>
               <button
                 onClick={toggleFullscreen}
                 className="p-2 text-celo-primary hover:text-green-400 transition-colors"
@@ -99,7 +99,7 @@ export default function Home() {
                 )}
               </button>
             </div>
-            <p className="text-gray-300 text-base sm:text-lg px-2">Escanea el código QR para reclamar tus tokens CCOP</p>
+            <p className="text-gray-300 text-base sm:text-lg px-2">Escanea el código QR para reclamar tus Pesos Digitales (cCOP)</p>
           </div>
 
           {/* QR Code Card */}
@@ -160,7 +160,7 @@ export default function Home() {
                     <li>1. 📱 Abre la cámara de tu celular</li>
                     <li>2. 🔍 Escanea el código QR</li>
                     <li>3. 💰 Copia y pega la dirección de tu wallet</li>
-                    <li>4. 🎯 Reclama 25,000 CCOP tokens</li>
+                    <li>4. 🎯 Reclama 25,000 Pesos Digitales (cCOP)</li>
                   </ol>
                 </div>
                 

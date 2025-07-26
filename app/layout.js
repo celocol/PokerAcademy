@@ -4,14 +4,14 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Dispensador CCOP - Poker Academy',
-  description: 'Reclama tus tokens CCOP diarios en la blockchain de Celo',
+  title: 'Dispensador de Pesos Digitales (cCOP) - Poker Academy',
+  description: 'Reclama tus Pesos Digitales (cCOP) diarios en la blockchain de Celo',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   themeColor: '#35D07F',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Dispensador CCOP'
+    title: 'Dispensador de Pesos Digitales (cCOP)'
   },
   formatDetection: {
     telephone: false
