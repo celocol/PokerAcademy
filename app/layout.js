@@ -4,8 +4,18 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Poker Academy - Celo Token Claim',
-  description: 'Claim your daily Poker Academy tokens on Celo blockchain',
+  title: 'Dispensador CCOP - Poker Academy',
+  description: 'Reclama tus tokens CCOP diarios en la blockchain de Celo',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+  themeColor: '#35D07F',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Dispensador CCOP'
+  },
+  formatDetection: {
+    telephone: false
+  }
 }
 
 export default function RootLayout({ children }) {

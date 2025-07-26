@@ -158,7 +158,7 @@ export default function DynamicClaimPage({ params }) {
     }
 
     if (!canClaim) {
-      setError('Esta dirección no es elegible para reclamar tokens en este momento')
+      setError('No puedes reclamar tokens en este momento')
       return
     }
 
@@ -197,11 +197,11 @@ export default function DynamicClaimPage({ params }) {
       
       // Handle specific contract errors
       if (error.message.includes('AlreadyClaimedToday')) {
-        setError('❌ Esta dirección ya reclamó tokens hoy. ¡Inténtalo de nuevo mañana!')
+        setError('❌ Ya reclamaste tokens hoy. ¡Inténtalo de nuevo mañana!')
       } else if (error.message.includes('MaxLifetimeClaimsReached')) {
-        setError('❌ Esta dirección ha alcanzado el máximo de reclamaciones de por vida (3 veces)')
+        setError('❌ Has alcanzado el máximo de reclamaciones de por vida (3 veces)')
       } else if (error.message.includes('InsufficientTokenBalance')) {
-        setError('❌ El contrato tiene balance insuficiente de tokens. Por favor inténtalo más tarde.')
+        setError('❌ El dispensador de tokens no tiene suficientes fondos. Por favor inténtalo más tarde.')
       } else {
         setError('❌ Error al reclamar tokens: ' + error.message)
       }
@@ -266,30 +266,30 @@ export default function DynamicClaimPage({ params }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-celo-dark via-gray-900 to-black">
-      <header className="container mx-auto px-4 py-6">
+      <header className="container mx-auto px-4 py-4 sm:py-6">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <a 
               href="/" 
               className="text-celo-primary hover:text-green-400 transition-colors"
             >
-              <ArrowLeftIcon className="w-6 h-6" />
+              <ArrowLeftIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </a>
             <div>
-              <h1 className="text-3xl font-bold text-gradient">Reclamar Tokens CCOP</h1>
-              <p className="text-gray-300">Sistema de Reclamación de Tokens CCOP</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gradient">Reclamar Tokens CCOP</h1>
+              <p className="text-gray-300 text-sm sm:text-base">Sistema de Reclamación de Tokens CCOP</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-md">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-md">
         
 
 
         {/* Destination Address Input */}
-        <div className="card mb-8">
-          <h3 className="text-xl font-semibold mb-4">Ingresar Dirección de Destino</h3>
+        <div className="card mb-6 sm:mb-8">
+          <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Ingresar Dirección de Destino</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -353,18 +353,7 @@ export default function DynamicClaimPage({ params }) {
               {loading ? 'Procesando Transacción...' : 'Reclamar 25,000 Tokens CCOP'}
             </button>
 
-            {/* Test Success Message Button (Temporary) */}
-            <button
-              onClick={() => {
-                const testTxHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
-                const celoscanUrl = getCeloscanUrl(testTxHash)
-                const shortHash = formatTransactionHash(testTxHash)
-                setSuccess(`✅ ¡Tokens CCOP reclamados exitosamente para ${destinationAddress}! Transacción: ${shortHash} | ${celoscanUrl}`)
-              }}
-              className="w-full mt-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-            >
-              🧪 Probar Mensaje de Éxito con TXN ID
-            </button>
+
 
             {!claimInfo && (
               <p className="text-yellow-400 text-sm mt-2 text-center">
@@ -376,10 +365,10 @@ export default function DynamicClaimPage({ params }) {
               <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
                 <p className="text-red-400 text-sm text-center font-medium">
                   {claimInfo.claimedToday 
-                    ? '❌ Esta dirección ya reclamó tokens hoy. ¡Inténtalo de nuevo mañana!' 
+                    ? '❌ Ya reclamaste tokens hoy. ¡Inténtalo de nuevo mañana!' 
                     : parseInt(claimInfo.totalClaims) >= 3 
-                      ? '❌ Esta dirección ha alcanzado el máximo de reclamaciones de por vida (3 veces)'
-                      : '❌ Esta dirección no puede reclamar tokens ahora (balance insuficiente del contrato)'
+                      ? '❌ Has alcanzado el máximo de reclamaciones de por vida (3 veces)'
+                      : '❌ El dispensador de tokens no tiene suficientes fondos. Por favor inténtalo más tarde.'
                   }
                 </p>
               </div>
@@ -388,7 +377,7 @@ export default function DynamicClaimPage({ params }) {
             {claimInfo && canClaim && (
               <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <p className="text-green-400 text-sm text-center font-medium">
-                  ✅ ¡Esta dirección es elegible para reclamar 25,000 tokens CCOP!
+                  ✅ ¡Puedes reclamar 25,000 tokens CCOP!
                 </p>
               </div>
             )}
@@ -399,34 +388,56 @@ export default function DynamicClaimPage({ params }) {
 
         {/* Error and Success Messages */}
         {error && (
-          <div className="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg max-w-md">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
+          <div className="fixed bottom-4 left-4 right-4 sm:right-4 sm:left-auto bg-red-500 text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg max-w-md mx-auto sm:mx-0">
+            <div className="flex justify-between items-start">
+              <div className="flex-1 pr-2">
+                <p className="font-medium text-sm sm:text-base">Error</p>
+                <p className="text-xs sm:text-sm">{error}</p>
+              </div>
+              <button
+                onClick={() => setError('')}
+                className="text-white hover:text-gray-200 transition-colors p-1"
+                aria-label="Cerrar mensaje"
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
 
         {success && (
-          <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg max-w-md">
-            <p className="font-medium">✅ ¡Transacción Exitosa!</p>
-            <div className="text-sm mb-2">
-              {success.includes('Transacción:') ? (
-                <div>
-                  <p>{success.split('Transacción:')[0]}</p>
-                  <div className="mt-2">
-                    <span className="text-gray-300">TXN ID: </span>
-                    <a 
-                      href={success.split('|')[1]?.trim() || '#'} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-200 hover:text-blue-100 underline font-mono"
-                    >
-                      {success.split('Transacción:')[1]?.split('|')[0]?.trim()}
-                    </a>
-                  </div>
+          <div className="fixed bottom-4 left-4 right-4 sm:right-4 sm:left-auto bg-green-500 text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg max-w-md mx-auto sm:mx-0">
+            <div className="flex justify-between items-start">
+              <div className="flex-1 pr-2">
+                <p className="font-medium text-sm sm:text-base">✅ ¡Transacción Exitosa!</p>
+                <div className="text-xs sm:text-sm mb-2">
+                  {success.includes('Transacción:') ? (
+                    <div>
+                      <p>{success.split('Transacción:')[0]}</p>
+                      <div className="mt-2">
+                        <span className="text-gray-300">TXN ID: </span>
+                        <a 
+                          href={success.split('|')[1]?.trim() || '#'} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-200 hover:text-blue-100 underline font-mono break-all"
+                        >
+                          {success.split('Transacción:')[1]?.split('|')[0]?.trim()}
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>{success}</p>
+                  )}
                 </div>
-              ) : (
-                <p>{success}</p>
-              )}
+              </div>
+              <button
+                onClick={() => setSuccess('')}
+                className="text-white hover:text-gray-200 transition-colors p-1"
+                aria-label="Cerrar mensaje"
+              >
+                ✕
+              </button>
             </div>
           </div>
         )}
