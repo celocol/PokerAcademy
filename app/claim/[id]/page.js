@@ -12,6 +12,7 @@ import {
 const CONTRACT_ABI = [
   "function claimDailyTokens() external",
   "function claimDailyTokensGasless(address user, uint256 deadline, bytes calldata signature) external",
+  "function ownerClaimForUser(address user) external",
   "function getUserClaimInfo(address user) external view returns (uint256, uint256, bool, uint256, bool)",
   "function getTimeUntilNextClaim(address user) external view returns (uint256)",
   "function getContractBalance() external view returns (uint256)",
@@ -174,22 +175,16 @@ export default function DynamicClaimPage({ params }) {
 
       // Execute transaction to send tokens to the specified address
       try {
-        console.log('Executing transaction for address:', destinationAddress)
+        console.log('Executing owner claim for address:', destinationAddress)
         
-        // For now, we'll use a direct transfer approach
-        // This requires the contract to have a function that allows the owner to send tokens
-        // Since the current contract doesn't have this, we'll show an error
+        // Use the owner function to claim tokens for the user
+        const tx = await contract.ownerClaimForUser(destinationAddress)
+        const receipt = await tx.wait()
+        const txHash = receipt.hash
+        const celoscanUrl = getCeloscanUrl(txHash)
+        const shortHash = formatTransactionHash(txHash)
         
-        setError('❌ El diseño actual del contrato requiere firma del usuario. Por favor contacta soporte para agregar función de transferencia del propietario.')
-        return
-        
-        // TODO: Implementar función de transferencia del propietario en el contrato
-        // const tx = await claimTokensGasless(destinationAddress, signer, contract)
-        // const receipt = await tx.wait()
-        // const txHash = receipt.hash
-        // const celoscanUrl = getCeloscanUrl(txHash)
-        // const shortHash = formatTransactionHash(txHash)
-        // setSuccess(`✅ ¡Tokens CCOP reclamados exitosamente para ${destinationAddress}! Transacción: ${shortHash} | ${celoscanUrl}`)
+        setSuccess(`✅ ¡Tokens CCOP reclamados exitosamente para ${destinationAddress}! Transacción: ${shortHash} | ${celoscanUrl}`)
       } catch (error) {
         console.error('Transaction failed:', error)
         throw error
@@ -368,7 +363,7 @@ export default function DynamicClaimPage({ params }) {
               }}
               className="w-full mt-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
             >
-              🧪 Probar Mensaje de Éxito
+              🧪 Probar Mensaje de Éxito con TXN ID
             </button>
 
             {!claimInfo && (
@@ -413,19 +408,26 @@ export default function DynamicClaimPage({ params }) {
         {success && (
           <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg max-w-md">
             <p className="font-medium">✅ ¡Transacción Exitosa!</p>
-            <p className="text-sm mb-2">{success}</p>
-            {success.includes('Transacción:') && (
-              <div className="mt-2">
-                <a 
-                  href={success.split('|')[1]?.trim() || '#'} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-200 hover:text-blue-100 underline text-xs"
-                >
-                  🔗 Ver en Celoscan
-                </a>
-              </div>
-            )}
+            <div className="text-sm mb-2">
+              {success.includes('Transacción:') ? (
+                <div>
+                  <p>{success.split('Transacción:')[0]}</p>
+                  <div className="mt-2">
+                    <span className="text-gray-300">TXN ID: </span>
+                    <a 
+                      href={success.split('|')[1]?.trim() || '#'} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-200 hover:text-blue-100 underline font-mono"
+                    >
+                      {success.split('Transacción:')[1]?.split('|')[0]?.trim()}
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <p>{success}</p>
+              )}
+            </div>
           </div>
         )}
       </main>

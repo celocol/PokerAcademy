@@ -88,6 +88,16 @@ contract CCOPDispenser is Ownable, ReentrancyGuard {
     }
     
     /**
+     * @dev Owner gasless claim function - owner can claim for any user without signature
+     * @param user The address that wants to claim tokens
+     */
+    function ownerClaimForUser(address user) external onlyOwner nonReentrant {
+        _processClaim(user);
+        
+        emit GaslessTokensClaimed(user, DAILY_CLAIM_AMOUNT, block.timestamp, msg.sender);
+    }
+    
+    /**
      * @dev Internal function to process the claim logic
      */
     function _processClaim(address user) internal {
