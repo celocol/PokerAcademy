@@ -31,6 +31,9 @@ export default function DynamicClaimPage({ params }) {
 
   // Contract address - replace with your deployed contract address
   const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000'
+  
+  // Private key for transaction signing (should be in environment variables)
+  const PRIVATE_KEY = process.env.NEXT_PUBLIC_PRIVATE_KEY || '0x0000000000000000000000000000000000000000000000000000000000000000'
 
   useEffect(() => {
     // Generate a unique session ID for this claim attempt
@@ -72,6 +75,11 @@ export default function DynamicClaimPage({ params }) {
     return new ethers.JsonRpcProvider(rpcUrl)
   }
 
+  const getSigner = () => {
+    const provider = getPublicProvider()
+    return new ethers.Wallet(PRIVATE_KEY, provider)
+  }
+
   const getContract = () => {
     const provider = getProvider()
     if (!provider) return null
@@ -82,6 +90,11 @@ export default function DynamicClaimPage({ params }) {
   const getPublicContract = () => {
     const provider = getPublicProvider()
     return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider)
+  }
+
+  const getContractWithSigner = () => {
+    const signer = getSigner()
+    return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
   }
 
   const verifyAddress = async (address) => {
@@ -148,31 +161,16 @@ export default function DynamicClaimPage({ params }) {
       return
     }
 
-    if (typeof window.ethereum === 'undefined') {
-      setError('Please install MetaMask or another Web3 wallet')
-      return
-    }
-
     try {
       setLoading(true)
       setError('')
       setSuccess('')
 
-      // Request account access
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      })
-      
-      if (accounts.length === 0) {
-        setError('Please connect your wallet to claim tokens')
-        return
-      }
-
-      const provider = getProvider()
-      const signer = await provider.getSigner()
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-
       console.log('✅ Address verified as eligible, executing transaction...')
+
+      // Get contract with signer using private key
+      const contract = getContractWithSigner()
+      const signer = getSigner()
 
       // Try gasless transaction first
       try {
@@ -328,7 +326,7 @@ export default function DynamicClaimPage({ params }) {
                   : 'btn-primary'
               }`}
             >
-              {loading ? 'Claiming...' : 'Claim 25,000 CCOP Tokens'}
+              {loading ? 'Processing Transaction...' : 'Claim 25,000 CCOP Tokens'}
             </button>
 
             {!claimInfo && (
